@@ -19,22 +19,27 @@ function ModelLoader() {
 
         let loadedModel: GLTF;
         const glftLoader = new GLTFLoader();
-        glftLoader.load('/models/retro_computer/scene.gltf', (gltfScene) => {
+        glftLoader.load('/models/kieranPC.glb', (gltfScene) => {
             loadedModel = gltfScene;
             // console.log(loadedModel);
 
-            gltfScene.scene.rotation.y = Math.PI / 8;
+            // Set frustumCulled to false for all objects
+            gltfScene.scene.traverse((object) => {
+                object.frustumCulled = false;
+            });
+
+            gltfScene.scene.rotation.y = -Math.PI / 2;
             gltfScene.scene.position.y = 3;
             gltfScene.scene.scale.set(10, 10, 10);
             canvas.scene.add(gltfScene.scene);
         });
 
         const animate = () => {
-            if (loadedModel) {
-                loadedModel.scene.rotation.x += 0.01;
-                loadedModel.scene.rotation.y += 0.01;
-                loadedModel.scene.rotation.z += 0.01;
-            }
+            // if (loadedModel) {
+            //     loadedModel.scene.rotation.x += 0.01;
+            //     loadedModel.scene.rotation.y += 0.01;
+            //     loadedModel.scene.rotation.z += 0.01;
+            // }
             requestAnimationFrame(animate);
         };
         animate();

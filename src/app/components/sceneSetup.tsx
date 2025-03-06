@@ -1,29 +1,36 @@
 ﻿import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import Stats from 'three/examples/jsm/libs/stats.module';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import Stats from 'three/examples/jsm/libs/stats.module.js';
+import { gsap } from 'gsap';
 
 export default class SceneSetup {
     scene
     camera
     renderer
-    constructor(canvasId) {
-        // NOTE: Core components to initialize Three.js app.
+    private fov: number;
+    private nearPlane: number;
+    private farPlane: number;
+    private canvasId: string;
+    clock
+    stats
+    controls
+    ambientLight
+    directionalLight
+
+    constructor(canvasId: string) {
         this.scene = undefined;
         this.camera = undefined;
         this.renderer = undefined;
 
-        // NOTE: Camera params;
-        this.fov = 45;
+        this.fov = 90;
         this.nearPlane = 1;
         this.farPlane = 1000;
         this.canvasId = canvasId;
 
-        // NOTE: Additional components.
         this.clock = undefined;
         this.stats = undefined;
         this.controls = undefined;
 
-        // NOTE: Lighting is basically required.
         this.ambientLight = undefined;
         this.directionalLight = undefined;
     }
@@ -36,17 +43,17 @@ export default class SceneSetup {
             1,
             1000
         );
-        this.camera.position.z = 48;
+        this.camera.position.set(0, 150, 350);
 
-        // NOTE: Specify a canvas which is already created in the HTML.
-        const canvas = document.getElementById(this.canvasId);
+        const canvas = document.getElementById(this.canvasId) as HTMLCanvasElement | null;
+        if (!canvas) {
+            throw new Error(`Canvas element with id '${this.canvasId}' not found`);
+        }
         this.renderer = new THREE.WebGLRenderer({
             canvas,
-            // NOTE: Anti-aliasing smooths out the edges.
             antialias: true,
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        // this.renderer.shadowMap.enabled = true;
         document.body.appendChild(this.renderer.domElement);
 
         this.clock = new THREE.Clock();
@@ -54,35 +61,37 @@ export default class SceneSetup {
         this.stats = Stats();
         document.body.appendChild(this.stats.dom);
 
-        // ambient light which is for the whole scene
         this.ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
         this.ambientLight.castShadow = true;
         this.scene.add(this.ambientLight);
 
-        // directional light - parallel sun rays
         this.directionalLight = new THREE.DirectionalLight(0xffffff, 2);
-        // this.directionalLight.castShadow = true;
         this.directionalLight.position.set(0, 32, 64);
         this.scene.add(this.directionalLight);
 
-        // if window resizes
         window.addEventListener('resize', () => this.onWindowResize(), false);
 
-        // NOTE: Load space background.
-        // this.loader = new THREE.TextureLoader();
-        // this.scene.background = this.loader.load('./pics/space.jpeg');
+        this.introAnimation();
+    }
 
-        // NOTE: Declare uniforms to pass into glsl shaders.
-        // this.uniforms = {
-        //   u_time: { type: 'f', value: 1.0 },
-        //   colorB: { type: 'vec3', value: new THREE.Color(0xfff000) },
-        //   colorA: { type: 'vec3', value: new THREE.Color(0xffffff) },
-        // };
+    introAnimation() {
+        const duration = 5; // duration of the animation in seconds
+        const targetPosition = { x: 0, y: 150, z: 350 };
+        const startPosition = { x: 500, y: 200, z: 0 };
+
+        gsap.fromTo(this.camera.position, startPosition, {
+            x: targetPosition.x,
+            y: targetPosition.y,
+            z: targetPosition.z,
+            duration: duration,
+            ease: 'power1.inOut',
+            onUpdate: () => {
+                this.camera.lookAt(this.scene.position);
+            }
+        });
     }
 
     animate() {
-        // NOTE: Window is implied.
-        // requestAnimationFrame(this.animate.bind(this));
         window.requestAnimationFrame(this.animate.bind(this));
         this.render();
         this.stats.update();
@@ -90,8 +99,6 @@ export default class SceneSetup {
     }
 
     render() {
-        // NOTE: Update uniform data on each render.
-        // this.uniforms.u_time.value += this.clock.getDelta();
         this.renderer.render(this.scene, this.camera);
     }
 

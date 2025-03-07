@@ -72,6 +72,11 @@ export default class SceneSetup {
         window.addEventListener('resize', () => this.onWindowResize(), false);
 
         this.introAnimation();
+
+        const zoomButton = document.getElementById('zoomButton');
+        if (zoomButton) {
+            zoomButton.addEventListener('click', () => this.zoomInOnScreen());
+        }
     }
 
     introAnimation() {
@@ -91,11 +96,42 @@ export default class SceneSetup {
         });
     }
 
+    zoomInOnScreen() {
+        const duration = 2; // duration of the zoom-in animation in seconds
+        const targetPosition = { x: 0, y: 135, z: 200 }; // Adjust the target position to zoom in on the screen
+
+        this.controls.enabled = false;
+
+        gsap.to(this.camera.position, {
+            x: targetPosition.x,
+            y: targetPosition.y,
+            z: targetPosition.z,
+            duration: duration,
+            ease: 'power1.inOut',
+            onUpdate: () => {
+                this.camera.lookAt(new THREE.Vector3(0, 150, 0)); // Look at the same height as the camera
+            },
+        });
+
+        gsap.to(this.camera.rotation, {
+            x: 0,
+            y: 0,
+            z: 0,
+            duration: duration,
+            ease: 'power1.inOut',
+            onUpdate: () => {
+                this.camera.updateProjectionMatrix(); // Update the camera projection matrix during the animation
+            },
+        });
+    }
+
     animate() {
         window.requestAnimationFrame(this.animate.bind(this));
         this.render();
         this.stats.update();
-        this.controls.update();
+        if (this.controls.enabled){
+            this.controls.update();
+        }
     }
 
     render() {
